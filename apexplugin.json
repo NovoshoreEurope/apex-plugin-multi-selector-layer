@@ -25,6 +25,7 @@
         "plugin" : {
           "internalName" : "MULTI_SELECT_WINDOW",
           "type" : "item",
+          "demo" : "https://raw.githubusercontent.com/NovoshoreEurope/Apex-Plug-ins/main/src/images/preview_image_1.png",
           "previewImage" : "https://raw.githubusercontent.com/NovoshoreEurope/Apex-Plug-ins/main/src/images/preview_image_1.png"
         }
       }
