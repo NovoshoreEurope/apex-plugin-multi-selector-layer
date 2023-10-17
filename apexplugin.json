@@ -4,9 +4,6 @@
     "description" : "Introducing a simple yet effective multi-selector component that allows users to conveniently pick multiple items from a list. The user-friendly interface enables item selection by a simple click, with selected items visually highlighted. This basic version provides a foundation for further customization, offering the ability to select and display chosen items, making it a practical starting point for creating a more robust multi-selector component tailored to your specific project requirements.",
     "keywords" : ["selector", "layer", "helper", "firstrun"],
     "homepage" : "https://github.com/NovoshoreEurope/Apex-Plug-ins",
-    "bugs" : {
-      "email" : "juan.antonio@novoshore.com"
-    },
     "license" : "MIT",
     "commercial" : "No",
     "author" : {
@@ -20,7 +17,7 @@
    "oracle" : {
       "versions" : ["23.1.5"],
       "apex" : {
-        "versions" : ["5.0.0"],
+        "versions" : ["23.1.5"],
         "plugin" : {
           "internalName" : "MULTI_SELECT_WINDOW",
           "type" : "item",
