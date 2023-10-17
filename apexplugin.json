@@ -1,29 +1,29 @@
 {
-    "name" : "Multi selector layer",
-    "version" : "0.6.1",
-    "description" : "Introducing a simple yet effective multi-selector component that allows users to conveniently pick multiple items from a list. The user-friendly interface enables item selection by a simple click, with selected items visually highlighted. This basic version provides a foundation for further customization, offering the ability to select and display chosen items, making it a practical starting point for creating a more robust multi-selector component tailored to your specific project requirements.",
-    "keywords" : ["selector", "layer", "helper", "firstrun"],
-    "homepage" : "https://github.com/NovoshoreEurope/Apex-Plug-ins",
-    "license" : "MIT",
-    "commercial" : "No",
-    "author" : {
-      "name" : "Juan Antonio Castellanos",
-      "email" : "juan.antonio@novoshore.com"
-    },
-    "repository" : {
-      "type" : "git",
-      "url" : "https://github.com/NovoshoreEurope/Apex-Plug-ins.git"
-    },
-   "oracle" : {
-      "versions" : ["23.1.5"],
-      "apex" : {
-        "versions" : ["23.1.5"],
-        "plugin" : {
-          "internalName" : "MULTI_SELECT_WINDOW",
-          "type" : "item",
-          "demo" : "https://vt1ua0ymgopd1jc-dbnsworkshop.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/juanantonio/plugin-arena/multi_selector_window",
-          "previewImage" : "https://raw.githubusercontent.com/NovoshoreEurope/Apex-Plug-ins/main/src/images/preview_image_1.png"
-        }
+  "name": "Multi selector layer",
+  "version": "0.6.1",
+  "description": "Introducing a simple yet effective multi-selector component that allows users to conveniently pick multiple items from a list.",
+  "keywords": ["selector", "layer", "helper"],
+  "homepage": "https://github.com/NovoshoreEurope/Apex-Plug-ins",
+  "license": "MIT",
+  "commercial": "No",
+  "author": {
+    "name": "Juan Antonio Castellanos",
+    "email": "juan.antonio@novoshore.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/NovoshoreEurope/Apex-Plug-ins.git"
+  },
+  "oracle": {
+    "versions": ["23.2.0", "21.1.0", "19.1.0"],
+    "apex": {
+      "versions": ["23.1.0"],
+      "plugin": {
+        "internalName": "MULTI_SELECT_WINDOW",
+        "type": "item",
+        "demo": "https://vt1ua0ymgopd1jc-dbnsworkshop.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/juanantonio/plugin-arena/multi_selector_window",
+        "previewImage": "https://raw.githubusercontent.com/NovoshoreEurope/Apex-Plug-ins/main/src/images/preview_image_1.png"
       }
     }
   }
+}
