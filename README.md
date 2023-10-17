@@ -8,7 +8,7 @@ The repository's scope is for hosting and managing Oracle APEX plugins, enabling
 
 ### Features
 
-Javascript, JQuery files for UXXI projects
+Oracle Apex files for Apex projects
 
 ### Oracle APEX JavaScript API Reference
 
