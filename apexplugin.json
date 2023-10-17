@@ -5,7 +5,6 @@
     "keywords" : ["selector", "layer", "helper", "firstrun"],
     "homepage" : "https://github.com/NovoshoreEurope/Apex-Plug-ins",
     "bugs" : {
-      "url" : "https://github.com/Dani3lSun/apex-plugin-guidedtour/issues",
       "email" : "juan.antonio@novoshore.com"
     },
     "license" : "MIT",
@@ -16,7 +15,7 @@
     },
     "repository" : {
       "type" : "git",
-      "url" : "https://github.com/NovoshoreEurope/Apex-Plug-ins"
+      "url" : "https://github.com/NovoshoreEurope/Apex-Plug-ins.git"
     },
    "oracle" : {
       "versions" : ["23.1.5"],
