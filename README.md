@@ -5,6 +5,10 @@ The repository's scope is for hosting and managing Oracle APEX plugins, enabling
   <a href="https://www.novoshore.com/" target="blank"><img src="https://www.novoshore.com/wp-content/uploads/2018/08/n-ugly-3-e1534939287262.png" width="315" alt="Novoshore Logo" /></a>
 </p>
 <p align="center">Oracle Apex files for Apex projects.</p>
+# Multi selector layer
+<p align="center">
+  Introducing a simple yet effective multi-selector component that allows users to conveniently pick multiple items from a list.
+</p>
 
 ### Features
 
