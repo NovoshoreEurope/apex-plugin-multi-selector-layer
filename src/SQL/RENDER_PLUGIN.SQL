@@ -6,8 +6,8 @@ PROCEDURE render_plugin (
 AS
     --custom plugin attributes
     l_result                                apex_plugin.t_page_item_render_result;
-    l_item_name                             varchar2(1000) := apex_plugin.get_input_name_for_page_item(false);
-    l_item_value                            varchar2(1000) := p_param.value;
+    l_item_name                             VARCHAR2(1000) := apex_plugin.get_input_name_for_page_item(false);
+    l_json_clob                             CLOB := p_param.value;
     --
     attr_label_name                         p_item.attribute_02%TYPE := p_item.attribute_02;
     attr_label_color                        p_item.attribute_02%TYPE := p_item.attribute_04;
@@ -23,7 +23,9 @@ AS
     -- Declara un cursor dinámico
     c ref_cur;
     --
-    l_html      varchar(4000);
+    l_html                                  VARCHAR2(4000);
+    l_clob_to_varchar2                      VARCHAR2(4000);         -- Para almacenar una porción del CLOB.
+    l_escaped_html_value                    VARCHAR2(4000);        -- Para almacenar el valor de CLOB escapado para HTML.
     --
 BEGIN
     --debug
@@ -49,14 +51,12 @@ BEGIN
         -- Obtiene el siguiente registro del cursor
         FETCH c INTO v_identificador, v_valor, v_descripcion;
             -- Sale del bucle si no hay más registros
-        EXIT WHEN c%NOTFOUND;
-            -- Split l_item_value by '@' delimiter
-            v_split_values := apex_string.split(l_item_value, '@');
+            EXIT WHEN c%NOTFOUND;
             -- Initialize a variable to track if the checkbox should be checked
             v_checkbox_checked := 'N';
-            -- Check if v_valor is in the split values
-            FOR i IN 1..v_split_values.COUNT LOOP
-                IF v_valor = v_split_values(i) THEN
+            -- Procesar el JSON para extraer los objetos
+            FOR r IN (SELECT j.value FROM json_table(l_json_clob, '$[*]' COLUMNS ( value VARCHAR2(4000) PATH '$' )) j ) LOOP
+                IF v_valor = r.value THEN
                     v_checkbox_checked := 'Y';
                     EXIT; -- No need to continue checking if found
                 END IF;
@@ -76,12 +76,18 @@ BEGIN
             l_html :=  l_html || '</li>';
     END LOOP;
     --
-    l_html :=  l_html || '</ul><input id="' || l_item_name || '" name="' || l_item_name || '" value="'||l_item_value||'" type="hidden"></div>';
+    APEX_DEBUG.LOG_LONG_MESSAGE(p_message => '[DEBUG-INFO] - l_json_clob: '||l_json_clob, p_level => 4);
+    -- Convertir CLOB a VARCHAR2 (Asegúrate de que el tamaño del CLOB es manejable)
+    l_clob_to_varchar2 := DBMS_LOB.SUBSTR(l_json_clob, 4000, 1); -- Obtiene los primeros 4000 caracteres
+
+    -- Escapar el contenido para HTML
+    l_escaped_html_value := apex_escape.html(l_clob_to_varchar2);
+    l_html :=  l_html || '</ul><input id="' || l_item_name || '" name="' || l_item_name || '" value="'||l_escaped_html_value||'" type="hidden"></div>';
     -- Cierra el cursor
     CLOSE c;
     --
     htp.p(l_html);
     --
-    apex_javascript.add_onload_code(p_code => 'multiSelectWindow._initialize("'||l_item_name||'", "'||l_item_value||'");');
+    apex_javascript.add_onload_code(p_code => 'multiSelectWindow._initialize("'||l_item_name||'", "'||l_escaped_html_value||'");');
     --
 end render_plugin;

@@ -18,8 +18,8 @@ whenever sqlerror exit sql.sqlcode rollback
 --------------------------------------------------------------------------------
 begin
 wwv_flow_imp.import_begin (
- p_version_yyyy_mm_dd=>'2023.04.28'
-,p_release=>'23.1.5'
+ p_version_yyyy_mm_dd=>'2023.10.31'
+,p_release=>'23.2.3'
 ,p_default_workspace_id=>7337444115725827
 ,p_default_application_id=>115
 ,p_default_id_offset=>0
@@ -33,14 +33,14 @@ prompt APPLICATION 115 - PLUGIN ARENA
 -- Application Export:
 --   Application:     115
 --   Name:            PLUGIN ARENA
---   Date and Time:   13:19 Tuesday October 17, 2023
+--   Date and Time:   13:32 Wednesday February 7, 2024
 --   Exported By:     JUANANTONIO
 --   Flashback:       0
 --   Export Type:     Component Export
 --   Manifest
 --     PLUGIN: 19783941033239815
 --   Manifest End
---   Version:         23.1.5
+--   Version:         23.2.3
 --   Instance ID:     7330142950308600
 --
 
@@ -55,7 +55,7 @@ wwv_flow_imp_shared.create_plugin(
  p_id=>wwv_flow_imp.id(19783941033239815)
 ,p_plugin_type=>'ITEM TYPE'
 ,p_name=>'MULTI_SELECT_WINDOW'
-,p_display_name=>'MultiSelectWindow 0.6.1'
+,p_display_name=>'MultiSelectWindow 0.7'
 ,p_supported_component_types=>'APEX_APPLICATION_PAGE_ITEMS:APEX_APPL_PAGE_IG_COLUMNS'
 ,p_javascript_file_urls=>wwv_flow_string.join(wwv_flow_t_varchar2(
 '#PLUGIN_FILES#ns.common.js',
@@ -70,8 +70,8 @@ wwv_flow_imp_shared.create_plugin(
 'AS',
 '    --custom plugin attributes',
 '    l_result                                apex_plugin.t_page_item_render_result;',
-'    l_item_name                             varchar2(1000) := apex_plugin.get_input_name_for_page_item(false);',
-'    l_item_value                            varchar2(1000) := p_param.value;',
+'    l_item_name                             VARCHAR2(1000) := apex_plugin.get_input_name_for_page_item(false);',
+'    l_json_clob                             CLOB := p_param.value;',
 '    --',
 '    attr_label_name                         p_item.attribute_02%TYPE := p_item.attribute_02;',
 '    attr_label_color                        p_item.attribute_02%TYPE := p_item.attribute_04;',
@@ -87,7 +87,9 @@ wwv_flow_imp_shared.create_plugin(
 unistr('    -- Declara un cursor din\00E1mico'),
 '    c ref_cur;',
 '    --',
-'    l_html      varchar(4000);',
+'    l_html                                  VARCHAR2(4000);',
+unistr('    l_clob_to_varchar2                      VARCHAR2(4000);         -- Para almacenar una porci\00F3n del CLOB.'),
+'    l_escaped_html_value                    VARCHAR2(4000);        -- Para almacenar el valor de CLOB escapado para HTML.',
 '    --',
 'BEGIN',
 '    --debug',
@@ -113,14 +115,12 @@ unistr('    -- Abre el cursor din\00E1mico con la consulta SQL'),
 '        -- Obtiene el siguiente registro del cursor',
 '        FETCH c INTO v_identificador, v_valor, v_descripcion;',
 unistr('            -- Sale del bucle si no hay m\00E1s registros'),
-'        EXIT WHEN c%NOTFOUND;',
-'            -- Split l_item_value by ''@'' delimiter',
-'            v_split_values := apex_string.split(l_item_value, ''@'');',
+'            EXIT WHEN c%NOTFOUND;',
 '            -- Initialize a variable to track if the checkbox should be checked',
 '            v_checkbox_checked := ''N'';',
-'            -- Check if v_valor is in the split values',
-'            FOR i IN 1..v_split_values.COUNT LOOP',
-'                IF v_valor = v_split_values(i) THEN',
+'            -- Procesar el JSON para extraer los objetos',
+'            FOR r IN (SELECT j.value FROM json_table(l_json_clob, ''$[*]'' COLUMNS ( value VARCHAR2(4000) PATH ''$'' )) j ) LOOP',
+'                IF v_valor = r.value THEN',
 '                    v_checkbox_checked := ''Y'';',
 '                    EXIT; -- No need to continue checking if found',
 '                END IF;',
@@ -141,13 +141,19 @@ unistr('            -- Sale del bucle si no hay m\00E1s registros'),
 '            l_html :=  l_html || ''</li>'';',
 '    END LOOP;',
 '    --',
-'    l_html :=  l_html || ''</ul><input id="'' || l_item_name || ''" name="'' || l_item_name || ''" value="''||l_item_value||''" type="hidden"></div>'';',
+'    APEX_DEBUG.LOG_LONG_MESSAGE(p_message => ''[DEBUG-INFO] - l_json_clob: ''||l_json_clob, p_level => 4);',
+unistr('    -- Convertir CLOB a VARCHAR2 (Aseg\00FArate de que el tama\00F1o del CLOB es manejable)'),
+'    l_clob_to_varchar2 := DBMS_LOB.SUBSTR(l_json_clob, 4000, 1); -- Obtiene los primeros 4000 caracteres',
+'',
+'    -- Escapar el contenido para HTML',
+'    l_escaped_html_value := apex_escape.html(l_clob_to_varchar2);',
+'    l_html :=  l_html || ''</ul><input id="'' || l_item_name || ''" name="'' || l_item_name || ''" value="''||l_escaped_html_value||''" type="hidden"></div>'';',
 '    -- Cierra el cursor',
 '    CLOSE c;',
 '    --',
 '    htp.p(l_html);',
 '    --',
-'    apex_javascript.add_onload_code(p_code => ''multiSelectWindow._initialize("''||l_item_name||''", "''||l_item_value||''");'');',
+'    apex_javascript.add_onload_code(p_code => ''multiSelectWindow._initialize("''||l_item_name||''", "''||l_escaped_html_value||''");'');',
 '    --',
 'end render_plugin;'))
 ,p_default_escape_mode=>'HTML'
@@ -159,19 +165,19 @@ unistr('            -- Sale del bucle si no hay m\00E1s registros'),
 ,p_about_url=>'https://www.novoshore.com/'
 ,p_plugin_comment=>'Introducing a simple yet effective multi-selector component that allows users to conveniently pick multiple items from a list. The user-friendly interface enables item selection by a simple click, with selected items visually highlighted. This basic '
 ||'version provides a foundation for further customization, offering the ability to select and display chosen items, making it a practical starting point for creating a more robust multi-selector component tailored to your specific project requirements.'
-,p_files_version=>147
-);
-wwv_flow_imp_shared.create_plugin_attr_group(
- p_id=>wwv_flow_imp.id(19784779510244376)
-,p_plugin_id=>wwv_flow_imp.id(19783941033239815)
-,p_title=>'Attributes'
-,p_display_sequence=>0
+,p_files_version=>157
 );
 wwv_flow_imp_shared.create_plugin_attr_group(
  p_id=>wwv_flow_imp.id(22761330943826069)
 ,p_plugin_id=>wwv_flow_imp.id(19783941033239815)
 ,p_title=>'Sql query'
 ,p_display_sequence=>1
+);
+wwv_flow_imp_shared.create_plugin_attr_group(
+ p_id=>wwv_flow_imp.id(19784779510244376)
+,p_plugin_id=>wwv_flow_imp.id(19783941033239815)
+,p_title=>'Attributes'
+,p_display_sequence=>0
 );
 wwv_flow_imp_shared.create_plugin_attribute(
  p_id=>wwv_flow_imp.id(20365155202304409)
@@ -214,6 +220,30 @@ end;
 /
 begin
 wwv_flow_imp.g_varchar2_table := wwv_flow_imp.empty_varchar2_table;
+wwv_flow_imp.g_varchar2_table(1) := '766172206D756C746953656C65637457696E646F773D7B6E616D653A6E756C6C2C5F696E697469616C697A653A66756E6374696F6E28742C65297B2275736520737472696374223B24282223622D646174612D6D756C746973656C6563742D696E666F22';
+wwv_flow_imp.g_varchar2_table(2) := '292E6F6E2822636C69636B222C2866756E6374696F6E28297B24282223646174612D6D756C746973656C6563742D696E666F22292E736C696465546F67676C6528292C24282223622D646174612D6D756C746973656C6563742D696E666F202E742D4963';
+wwv_flow_imp.g_varchar2_table(3) := '6F6E22292E746F67676C65436C617373282266612D616E676C652D75702066612D616E676C652D646F776E22297D29292C24282723646174612D6D756C746973656C6563742D696E666F20696E7075745B747970653D22636865636B626F78225D27292E';
+wwv_flow_imp.g_varchar2_table(4) := '6F6E28226368616E6765222C2866756E6374696F6E28297B76617220653D24282723646174612D6D756C746973656C6563742D696E666F20696E7075745B747970653D22636865636B626F78225D3A636865636B656427292E6D6170282866756E637469';
+wwv_flow_imp.g_varchar2_table(5) := '6F6E28297B72657475726E20242874686973292E76616C28297D29292E67657428292C6E3D4A534F4E2E737472696E676966792865293B247328742C6E297D29297D2C76616C75653A66756E6374696F6E28297B72657475726E20247628746869732E6E';
+wwv_flow_imp.g_varchar2_table(6) := '616D65297D2C76616C7565417341727261793A66756E6374696F6E28297B7472797B72657475726E2024282723646174612D6D756C746973656C6563742D696E666F20696E7075745B747970653D22636865636B626F78225D3A636865636B656427292E';
+wwv_flow_imp.g_varchar2_table(7) := '6D6170282866756E6374696F6E28297B72657475726E20242874686973292E76616C28297D29292E67657428297D63617463682874297B6D6F73747261724572726F7247656E657269636F28224D756C746953656C65637457696E646F77206572726F72';
+wwv_flow_imp.g_varchar2_table(8) := '3A20222B742E6D657373616765297D7D7D3B';
+null;
+end;
+/
+begin
+wwv_flow_imp_shared.create_plugin_file(
+ p_id=>wwv_flow_imp.id(13336921734052787)
+,p_plugin_id=>wwv_flow_imp.id(19783941033239815)
+,p_file_name=>'ns.plugin.min.js'
+,p_mime_type=>'text/javascript'
+,p_file_charset=>'utf-8'
+,p_file_content=>wwv_flow_imp.varchar2_to_blob(wwv_flow_imp.g_varchar2_table)
+);
+end;
+/
+begin
+wwv_flow_imp.g_varchar2_table := wwv_flow_imp.empty_varchar2_table;
 wwv_flow_imp.g_varchar2_table(1) := '766172206D756C746953656C65637457696E646F77203D207B0D0A202020202F2F205661726961626C65207061726120616C6D6163656E617220276E616D652720646520666F726D6120616363657369626C652061206F747261732066756E63696F6E65';
 wwv_flow_imp.g_varchar2_table(2) := '730D0A202020206E616D653A206E756C6C2C0D0A0D0A202020205F696E697469616C697A653A2066756E6374696F6E2028696E69744E616D652C20696E697456616C75657329207B0D0A20202020202020202275736520737472696374223B0D0A0D0A20';
 wwv_flow_imp.g_varchar2_table(3) := '202020202020202F2F2041646420616E206576656E742068616E646C657220746F2074686520627574746F6E0D0A202020202020202024282223622D646174612D6D756C746973656C6563742D696E666F22292E6F6E2822636C69636B222C2066756E63';
@@ -222,14 +252,15 @@ wwv_flow_imp.g_varchar2_table(5) := '20202020202020207D293B0D0A0D0A2020202020202
 wwv_flow_imp.g_varchar2_table(6) := '6563742D696E666F20696E7075745B747970653D22636865636B626F78225D27292E6F6E28276368616E6765272C2066756E6374696F6E202829207B0D0A2020202020202020202020202F2F2046696C74657220636865636B656420636865636B626F78';
 wwv_flow_imp.g_varchar2_table(7) := '657320616E64206765742074686569722076616C7565730D0A2020202020202020202020207661722073656C656374656456616C756573203D2024282723646174612D6D756C746973656C6563742D696E666F20696E7075745B747970653D2263686563';
 wwv_flow_imp.g_varchar2_table(8) := '6B626F78225D3A636865636B656427292E6D61702866756E6374696F6E202829207B0D0A2020202020202020202020202020202072657475726E20242874686973292E76616C28293B0D0A2020202020202020202020207D292E67657428293B0D0A0D0A';
-wwv_flow_imp.g_varchar2_table(9) := '2020202020202020202020202F2F2053746F7265207468652073656C65637465642076616C75657320736F6D6577686572652077697468207468652070726F766964656420276E616D65270D0A202020202020202020202020247328696E69744E616D65';
-wwv_flow_imp.g_varchar2_table(10) := '2C2073656C656374656456616C7565732E6A6F696E28656E756D5F737472696E67732E41525241595F534550415241544F5229293B0D0A20202020202020207D293B0D0A0D0A20202020202020202F2F204368616E67652074686520627574746F6E2069';
-wwv_flow_imp.g_varchar2_table(11) := '636F6E206F6E20636C69636B0D0A202020202020202066756E6374696F6E206368616E6765427574746F6E49636F6E2829207B0D0A2020202020202020202020206C65742024627574746F6E203D2024282223622D646174612D6D756C746973656C6563';
-wwv_flow_imp.g_varchar2_table(12) := '742D696E666F202E742D49636F6E22293B0D0A20202020202020202020202024627574746F6E2E746F67676C65436C617373282266612D616E676C652D75702066612D616E676C652D646F776E22293B0D0A20202020202020207D0D0A202020207D2C0D';
-wwv_flow_imp.g_varchar2_table(13) := '0A0D0A2020202076616C75653A2066756E6374696F6E202829207B0D0A202020202020202072657475726E20247628746869732E6E616D65293B0D0A202020207D2C0D0A0D0A2020202076616C7565417341727261793A2066756E6374696F6E20282920';
-wwv_flow_imp.g_varchar2_table(14) := '7B0D0A2020202020202020747279207B0D0A20202020202020202020202072657475726E20247628746869732E6E616D65292E73706C697428656E756D5F737472696E67732E41525241595F534550415241544F52293B0D0A20202020202020207D2063';
-wwv_flow_imp.g_varchar2_table(15) := '6174636820286572726F7229207B0D0A2020202020202020202020206D6F73747261724572726F7247656E657269636F28224D756C746953656C65637457696E646F77206572726F723A2022202B206572726F722E6D657373616765293B0D0A20202020';
-wwv_flow_imp.g_varchar2_table(16) := '202020207D0D0A202020207D0D0A7D3B';
+wwv_flow_imp.g_varchar2_table(9) := '2020202020202020202020202F2F2053746F7265207468652073656C65637465642076616C7565730D0A2020202020202020202020202F2F20436F6E7665727469722065736F732076616C6F72657320656E20756E206F626A65746F204A534F4E0D0A20';
+wwv_flow_imp.g_varchar2_table(10) := '2020202020202020202020766172206A736F6E537472696E67203D204A534F4E2E737472696E676966792873656C656374656456616C756573293B0D0A202020202020202020202020247328696E69744E616D652C206A736F6E537472696E67293B0D0A';
+wwv_flow_imp.g_varchar2_table(11) := '20202020202020207D293B0D0A0D0A20202020202020202F2F204368616E67652074686520627574746F6E2069636F6E206F6E20636C69636B0D0A202020202020202066756E6374696F6E206368616E6765427574746F6E49636F6E2829207B0D0A2020';
+wwv_flow_imp.g_varchar2_table(12) := '202020202020202020206C65742024627574746F6E203D2024282223622D646174612D6D756C746973656C6563742D696E666F202E742D49636F6E22293B0D0A20202020202020202020202024627574746F6E2E746F67676C65436C617373282266612D';
+wwv_flow_imp.g_varchar2_table(13) := '616E676C652D75702066612D616E676C652D646F776E22293B0D0A20202020202020207D0D0A202020207D2C0D0A0D0A2020202076616C75653A2066756E6374696F6E202829207B0D0A202020202020202072657475726E20247628746869732E6E616D';
+wwv_flow_imp.g_varchar2_table(14) := '65293B0D0A202020207D2C0D0A0D0A2020202076616C7565417341727261793A2066756E6374696F6E202829207B0D0A2020202020202020747279207B0D0A20202020202020202020202072657475726E2024282723646174612D6D756C746973656C65';
+wwv_flow_imp.g_varchar2_table(15) := '63742D696E666F20696E7075745B747970653D22636865636B626F78225D3A636865636B656427292E6D61702866756E6374696F6E202829207B0D0A2020202020202020202020202020202072657475726E20242874686973292E76616C28293B0D0A20';
+wwv_flow_imp.g_varchar2_table(16) := '20202020202020202020207D292E67657428293B0D0A20202020202020207D20636174636820286572726F7229207B0D0A2020202020202020202020206D6F73747261724572726F7247656E657269636F28224D756C746953656C65637457696E646F77';
+wwv_flow_imp.g_varchar2_table(17) := '206572726F723A2022202B206572726F722E6D657373616765293B0D0A20202020202020207D0D0A202020207D0D0A7D3B';
 null;
 end;
 /
@@ -305,29 +336,6 @@ wwv_flow_imp_shared.create_plugin_file(
  p_id=>wwv_flow_imp.id(21198293541012398)
 ,p_plugin_id=>wwv_flow_imp.id(19783941033239815)
 ,p_file_name=>'ns.common.min.js'
-,p_mime_type=>'text/javascript'
-,p_file_charset=>'utf-8'
-,p_file_content=>wwv_flow_imp.varchar2_to_blob(wwv_flow_imp.g_varchar2_table)
-);
-end;
-/
-begin
-wwv_flow_imp.g_varchar2_table := wwv_flow_imp.empty_varchar2_table;
-wwv_flow_imp.g_varchar2_table(1) := '766172206D756C746953656C65637457696E646F773D7B6E616D653A6E756C6C2C5F696E697469616C697A653A66756E6374696F6E28742C65297B2275736520737472696374223B24282223622D646174612D6D756C746973656C6563742D696E666F22';
-wwv_flow_imp.g_varchar2_table(2) := '292E6F6E2822636C69636B222C2866756E6374696F6E28297B24282223646174612D6D756C746973656C6563742D696E666F22292E736C696465546F67676C6528292C24282223622D646174612D6D756C746973656C6563742D696E666F202E742D4963';
-wwv_flow_imp.g_varchar2_table(3) := '6F6E22292E746F67676C65436C617373282266612D616E676C652D75702066612D616E676C652D646F776E22297D29292C24282723646174612D6D756C746973656C6563742D696E666F20696E7075745B747970653D22636865636B626F78225D27292E';
-wwv_flow_imp.g_varchar2_table(4) := '6F6E28226368616E6765222C2866756E6374696F6E28297B76617220653D24282723646174612D6D756C746973656C6563742D696E666F20696E7075745B747970653D22636865636B626F78225D3A636865636B656427292E6D6170282866756E637469';
-wwv_flow_imp.g_varchar2_table(5) := '6F6E28297B72657475726E20242874686973292E76616C28297D29292E67657428293B247328742C652E6A6F696E28656E756D5F737472696E67732E41525241595F534550415241544F5229297D29297D2C76616C75653A66756E6374696F6E28297B72';
-wwv_flow_imp.g_varchar2_table(6) := '657475726E20247628746869732E6E616D65297D2C76616C7565417341727261793A66756E6374696F6E28297B7472797B72657475726E20247628746869732E6E616D65292E73706C697428656E756D5F737472696E67732E41525241595F5345504152';
-wwv_flow_imp.g_varchar2_table(7) := '41544F52297D63617463682874297B6D6F73747261724572726F7247656E657269636F28224D756C746953656C65637457696E646F77206572726F723A20222B742E6D657373616765297D7D7D3B';
-null;
-end;
-/
-begin
-wwv_flow_imp_shared.create_plugin_file(
- p_id=>wwv_flow_imp.id(22750991302678071)
-,p_plugin_id=>wwv_flow_imp.id(19783941033239815)
-,p_file_name=>'ns.plugin.min.js'
 ,p_mime_type=>'text/javascript'
 ,p_file_charset=>'utf-8'
 ,p_file_content=>wwv_flow_imp.varchar2_to_blob(wwv_flow_imp.g_varchar2_table)
