@@ -1,8 +1,7 @@
 var multiSelectWindow = {
-    // Variable para almacenar 'name' de forma accesible a otras funciones
     name: null,
 
-    _initialize: function (initName, initValues) {
+    _initialize: function (selected_value_type, array_separator, initName, initValues) {
         "use strict";
 
         // Add an event handler to the button
@@ -15,13 +14,20 @@ var multiSelectWindow = {
         $('#data-multiselect-info input[type="checkbox"]').on('change', function () {
             // Filter checked checkboxes and get their values
             var selectedValues = $('#data-multiselect-info input[type="checkbox"]:checked').map(function () {
-                return $(this).val();
+                switch (selected_value_type) {
+                    case 'id':
+                        return $(this).val();
+                    case 'display':
+                        return $(this).attr("display");
+                    case 'description':
+                        return $(this).attr("description");
+                    default:
+                        return $(this).val();
+                }
             }).get();
 
-            // Store the selected values
-            // Convertir esos valores en un objeto JSON
-            var jsonString = JSON.stringify(selectedValues);
-            $s(initName, jsonString);
+            // Store the selected values somewhere with the provided 'name'
+            $s(initName, selectedValues.join(array_separator));
         });
 
         // Change the button icon on click
@@ -37,9 +43,7 @@ var multiSelectWindow = {
 
     valueAsArray: function () {
         try {
-            return $('#data-multiselect-info input[type="checkbox"]:checked').map(function () {
-                return $(this).val();
-            }).get();
+            return $v(this.name).split(array_separator);
         } catch (error) {
             mostrarErrorGenerico("MultiSelectWindow error: " + error.message);
         }

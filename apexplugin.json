@@ -1,6 +1,6 @@
 {
   "name": "Multi selector layer",
-  "version": "0.7",
+  "version": "1",
   "description": "Introducing a simple yet effective multi-selector component that allows users to conveniently pick multiple items from a list.",
   "keywords": ["selector", "layer", "multiple"],
   "homepage": "https://github.com/NovoshoreEurope/apex-plugin-multi-selector-layer",
@@ -16,13 +16,13 @@
     "url": "https://github.com/NovoshoreEurope/apex-plugin-multi-selector-layer.git"
   },
   "oracle": {
-    "versions": ["23.1.5"],
+    "versions": ["23.1.5","24.2"],
     "apex": {
-      "versions": ["23.1.5"],
+      "versions": ["23.1.5","24.2"],
       "plugin": {
         "internalName": "MULTI_SELECT_LAYER",
         "type": "item",
-        "demo": "https://vt1ua0ymgopd1jc-dbnsworkshop.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/juanantonio/plugin-arena/multi_selector_layer",
+        "demo": "https://cmbfvezufmpaqpn-nsworkshop23.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/juanantonio/pluginhub/multi-selector-layer",
         "previewImage": "https://raw.githubusercontent.com/NovoshoreEurope/apex-plugin-multi-selector-layer/main/src/images/preview_image_3.gif"
       }
     }
