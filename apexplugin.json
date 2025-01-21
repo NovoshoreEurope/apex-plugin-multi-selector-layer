@@ -22,7 +22,7 @@
       "plugin": {
         "internalName": "MULTI_SELECT_LAYER",
         "type": "item",
-        "demo": "https://cmbfvezufmpaqpn-nsworkshop23.adb.eu-frankfurt-1.oraclecloudapps.com/ords/r/juanantonio/pluginhub/multi-selector-layer",
+        "demo": "https://apexdev.novoshore.com/ords/r/uxxi/pluginhub/multi-selector-layer",
         "previewImage": "https://raw.githubusercontent.com/NovoshoreEurope/apex-plugin-multi-selector-layer/main/src/images/preview_image_3.gif"
       }
     }
